@@ -1,9 +1,16 @@
 #########################################################
 #########################################################
 # Basic Description:
+# Takes output from PISA server and generates:
+#   (1) List of the interacting pairs/residues
+#   (2) Pymol scripts for visualizing interacting residues
+#   (3) Visualization of the the distribution of pairs of residues involved in the interface
+#   (4)
 #
-#
-#
+# Classes:
+#   (1)
+#   (2)
+#   (3)
 #
 #########################################################
 #########################################################
@@ -14,9 +21,26 @@ import sys
 import os
 import re
 import subprocess
-
+from termcolor import colored,cprint
 from matplotlib import pyplot as plt
 
+#########################################################
+#########################################################
+
+cprint('-----> Beginning PISA interface calculations','green',attrs=['bold'])
+
+#########################################################
+#########################################################
+# Build a few functions to disable and enable print output
+# to the terminal window
+
+# Disable
+def blockPrint():
+    sys.stdout = open(os.devnull, 'w')
+
+# Restore
+def enablePrint():
+    sys.stdout = sys.__stdout__
 #########################################################
 #########################################################
 # Basic functions
@@ -62,6 +86,12 @@ def barPlot(X, width=1, plotlabel='',savelabel='',
 # Input PISA Interfaces as txt file
 
 filename='pseudoDimer.txt'
+# filename='pseudoDimer_SaltBridges.txt'
+
+files=['pseudoDimer.txt','pseudoDimer_SaltBridges.txt']
+
+for i in files:
+    
 
 N=5
 # Method 1:
@@ -178,7 +208,7 @@ Output general interface information
 
 '''
 pair_array=[]
-print('--> List of interacting pairs:')
+cprint('--> List of interacting pairs:','cyan',attrs=['bold'])
 for i,j,k,w,x,z in zip(g1_clean,g2,g3,g6_clean,g7,g8):
     print('Residue %s-%s from chain %s interacts with Residue %s-%s from chain %s'%(str(j),str(k),str(i),str(x),str(z),str(w)))
     pair_array.append('Residue %s-%s from chain %s interacts with Residue %s-%s from chain %s \n'%(str(j),str(k),str(i),str(x),str(z),str(w)))
@@ -187,7 +217,7 @@ proc = subprocess.Popen(['pwd'], stdout=subprocess.PIPE, shell=True)
 (out, err) = proc.communicate()
 current_dir=str(out,'utf-8')
 
-List_Interacting_Pairs='List_Interacting_Pairs.txt'
+List_Interacting_Pairs='(%s)_List_Interacting_Pairs.txt'%str(filename.rsplit(".")[0])
 List_Interacting_Pairs_Name=current_dir.rstrip()+'/'+List_Interacting_Pairs
 
 List_Interacting_Pairs_File=open(List_Interacting_Pairs_Name,"w")
@@ -278,7 +308,7 @@ Dump PyMol script into current working directory
 ## General Pymol formatting
 
 cmd_comic_p1 = ['set antialias = 1 ; set ambient=0.3 ; set direct=1.0 ; set ribbon_radius =0.2 ; set cartoon_highlight_color =grey50 ; set ray_trace_mode=1 ; set stick_radius = 0.2 ; set mesh_radius = 0.02 ; hide lines ; set cartoon_tube_radius, 0.2 ; set cartoon_fancy_helices=1 ; set cartoon_cylindrical_helices=0 ; set cartoon_flat_sheets = 1.0 ; set cartoon_smooth_loops = 0']
-cmd_comic_p2 =['set_color maarine=  [0.3, 0.8, 1.0] ; set_color graay=[0.8,0.8,0.8] ; set_color greeen=[0.0,0.5,0.0] ; set_color cyaan=[0.19,1.0,1.0] ; set_color oraange=[1.0,0.5043103448,0.03448275862] ; set_color piink=[1.0,0.2594339623,0.4622641509] ; set_color darkbluue=[0.2923976608,0.4444444444,1.0] ; set_color Lgreeen=[0,1.0,0.09130434783] ; set_color reed=[1.0,0.2130434783,0.0] ;']
+cmd_comic_p2 =['set_color maarine=  [0.3, 0.8, 1.0] ; set_color graay=[0.8,0.8,0.8] ; set_color greeen=[0.0,0.5,0.0] ; set_color cyaan=[0.19,1.0,1.0] ; set_color oraange=[1.0,0.5043103448,0.03448275862] ; set_color piink=[1.0,0.2594339623,0.4622641509] ; set_color darkbluue=[0.2923976608,0.4444444444,1.0] ; set_color Lgreeen=[0,1.0,0.09130434783] ; set_color reed=[1.0,0.2130434783,0.0] ; set spec_refl=0 ; ']
 cmd_comic = ";".join(cmd_comic_p1 + cmd_comic_p2)
 
 ## Step (1)
@@ -287,7 +317,7 @@ proc = subprocess.Popen(['pwd'], stdout=subprocess.PIPE, shell=True)
 (out, err) = proc.communicate()
 current_dir=str(out,'utf-8')
 
-outfileName2='Interface_Selection.txt'
+outfileName2='(%s)_Interface_Selection.txt'%str(filename.rsplit(".")[0])
 file2Name=current_dir.rstrip()+'/'+outfileName2
 cmd3 = [";".join(cmd1+cmd2)]
 # print(cmd3)
@@ -304,7 +334,7 @@ file2.close()
 
 ## (3b)
 
-outfileName3='Interface_Sticks_and_Surface.txt'
+outfileName3='(%s)_Interface_Sticks_and_Surface.txt'%str(filename.rsplit(".")[0])
 file3Name=current_dir.rstrip()+'/'+outfileName3
 
 sticksSurface_cmd = 'color cyaan, chain %s ; color maarine, chain %s ; flag ignore, allInt_residues, set ; show sticks, allInt_residues ;util.cbao allInt_residues ; show surface'%(str(g1_clean[0]),str(g6_clean[0]))
@@ -327,7 +357,7 @@ h_cmd = [h_cmd]
 h_cmd = ";".join([sticksSurface_cmd] + h_cmd)
 
 
-outfileName4='Interface_SticksSurfaceHbonds.txt'
+outfileName4='(%s)_Interface_SticksSurfaceHbonds.txt'%str(filename.rsplit(".")[0])
 file4Name=current_dir.rstrip()+'/'+outfileName4
 
 file4=open(file4Name,"w")
@@ -339,5 +369,13 @@ file4.close()
 
 #########################################################
 #########################################################
+
+
+
 #########################################################
 #########################################################
+
+
+
+
+
